@@ -1,7 +1,6 @@
 import os
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
-from starlette.requests import ClientDisconnect
 import uvicorn
 
 CHUNK_SIZE = 1024 * 1024  
@@ -17,15 +16,12 @@ def download_video_file():
             raise HTTPException(status_code=404, detail="File not found")
         
         with open(file_path, 'rb') as f:
+            i = 0
             while chunk := f.read(CHUNK_SIZE):
                 yield chunk
 
-    try:
-        headers = {'Content-Disposition': f'attachment; filename={file_name}; filesize={file_size}'}
-        response = StreamingResponse(iterfile(), headers=headers, media_type='video/mp4')
-    except ClientDisconnect:
-        print("Client Disconnected")
-
+    headers = {'Content-Disposition': f'attachment; filename={file_name}; filesize={file_size}'}
+    response = StreamingResponse(iterfile(), headers=headers, media_type='video/mp4')
     return response
 
 if __name__ == "__main__":
